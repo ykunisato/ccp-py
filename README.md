@@ -1,25 +1,25 @@
-# Dockerfiles for R, Julia, and Python on Quarto with VScode
+# Python Development Docker Image
 
-This is a repository for Dockerfiles to use R, Julia, and Python on Quarto via a remote connection from VSCode. To use it, simply start a Docker container and connect to it from your local VSCode.　The GitHub repository for this Docker image is: [ykunisato/ccp-vs](https://github.com/ykunisato/ccp-vs).
+This repository contains a lightweight Python development image for Orca or VSCode remote/container workflows. It includes Jupyter Notebook/Lab and the scientific Python packages required for numerical computing, machine learning, Bayesian modeling, active inference, and network analysis.
 
-Maintainer is Yoshihiko Kunisato (ykunisato@psy.senshu-u.ac.jp)
+Maintainer is Yoshihiko Kunisato (ykunisato@psy.senshu-u.ac.jp).
 
-Keywords: VSCode, Quarto, Python, Julia, R
+Keywords: VSCode, Orca, Docker, Python, Jupyter
 
 ## Usage
 
-1. Install ["Docker Desktop"](https://www.docker.com/products/docker-desktop)
+1. Install ["Docker Desktop"](https://www.docker.com/products/docker-desktop).
 
-2. Open "terminal"(Mac) or "PowerShell"(Windows)
+2. Build the image in this repository.
 
-3. Type the following code to pull a Docker container.
-
-
-```
-docker run -d -p 8888:8888 -v $(pwd):/home/jovyan/work --name ccpvs ykunisato/ccp-vs:latest
+```bash
+docker build -t ccp-py:latest .
 ```
 
+3. Start a container and mount your working directory.
 
-The following link is a template repository for dev containers. However, it may not work properly yet.
+```bash
+docker run --rm -it -p 8888:8888 -v "$(pwd):/workspace" --name ccp-py ccp-py:latest
+```
 
-https://github.com/ykunisato/dev-containers-template
+4. Open the printed Jupyter URL in your browser, or attach VSCode/Orca to the running container.

@@ -1,35 +1,80 @@
-name: Build & push docker image
+name: Publish Docker image to GHCR
 
 on:
   push:
-    tags:
-      - '**'
+    branches:
+      - main
+    # paths:
+    #   - Dockerfile
+    #   - requirements.txt
+  workflow_dispatch:
 
 jobs:
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v3
-      -
-        name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ghcr.io/ykunisato/ccp-vs
+  build:
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      packages: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
 
-      -
-        name: Login to GHCR
-        uses: docker/login-action@v2
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v4
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Normalize platform name
+        run: echo "PLATFORM_TAG=$(echo '${{ matrix.platform }}' | tr '/' '-')" >> "$GITHUB_ENV"
+
+      - name: Build and push platform-specific image
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          platforms: ${{ matrix.platform }}
+          tags: ghcr.io/${{ github.repository_owner }}/ccp-py:latest-${{ env.PLATFORM_TAG }}
+
+  merge:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifest
+        run: |
+          for i in 1 2 3; do
+            docker buildx imagetools create \
+              -t ghcr.io/${{ github.repository_owner }}/ccp-py:latest \
+              ghcr.io/${{ github.repository_owner }}/ccp-py:latest-linux-amd64 \
+              ghcr.io/${{ github.repository_owner }}/ccp-py:latest-linux-arm64 \
+            && break
+            echo "Attempt $i failed, retrying in 30s..."
+            sleep 30
+          done
