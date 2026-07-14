@@ -2,6 +2,8 @@ FROM python:3.11-slim
 
 LABEL maintainer="Yoshihiko Kunisato <kunisato@psy.senshu-u.ac.jp>"
 
+ARG TARGETARCH
+
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -10,9 +12,23 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
+        ca-certificates \
+        curl \
         git \
         libgomp1 \
         tini \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN case "${TARGETARCH}" in \
+        amd64|arm64) quarto_arch="${TARGETARCH}" ;; \
+        *) echo "Unsupported Quarto architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac \
+    && curl --fail --location --retry 3 \
+        "https://quarto.org/download/latest/quarto-linux-${quarto_arch}.deb" \
+        --output /tmp/quarto.deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends /tmp/quarto.deb \
+    && rm -f /tmp/quarto.deb \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
