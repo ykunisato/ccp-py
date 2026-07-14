@@ -13,6 +13,8 @@ docker pull ghcr.io/ykunisato/ccp-py:latest
 - Python 3.11
 - Jupyter Notebook / JupyterLab
 - Quarto CLI
+- TeX Live（XeLaTeX、LuaLaTeX、日本語組版、`latexmk`）
+- Noto CJK フォント（Typst による日本語 PDF 出力用）
 - 数値・データ分析: NumPy、SciPy、pandas、Matplotlib、seaborn
 - 機械学習・最適化: scikit-learn、JAX、Equinox、Optax、MCTS (`mctx`)
 - ベイズモデリング・能動推論: PyMC、ArviZ、`inferactively-pymdp`、PyHGF
@@ -61,6 +63,8 @@ quarto --version
 ```
 
 Jupyter カーネルを使う `.qmd` ファイルも、必要な Python 環境が同じイメージに含まれているため、コンテナ内で実行・レンダリングできます。
+
+PDF 出力では TeX Live の XeLaTeX / LuaLaTeX と日本語組版パッケージを利用できます。Typst を使う場合は、日本語 PDF 用に Noto CJK フォントも利用できます。
 
 ### VS Code から接続する
 

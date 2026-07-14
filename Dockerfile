@@ -14,9 +14,15 @@ RUN apt-get update \
         build-essential \
         ca-certificates \
         curl \
+        fontconfig \
+        fonts-noto-cjk \
         git \
+        latexmk \
         libgomp1 \
         tini \
+        texlive-lang-japanese \
+        texlive-luatex \
+        texlive-xetex \
     && rm -rf /var/lib/apt/lists/*
 
 RUN case "${TARGETARCH}" in \
